@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Washing machine front with vibration arcs on either side. Everything sits inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Machine body -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M44,31h20a6,6 0,0 1,6 6v34a6,6 0,0 1,-6 6h-20a6,6 0,0 1,-6 -6v-34a6,6 0,0 1,6 -6z" />
+    <!-- Control panel: two buttons, a dial and a divider line -->
+    <path
+        android:fillColor="@color/washwatch_blue"
+        android:pathData="M42.4,35.5a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0z M47.4,35.5a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0z M59,34.5h7a1,1 0,0 1,0 2h-7a1,1 0,0 1,0 -2z M38,39.6h32v1.4h-32z" />
+    <!-- Door -->
+    <path
+        android:fillColor="@color/washwatch_blue"
+        android:pathData="M43,58a11,11 0,1 0,22 0a11,11 0,1 0,-22 0z" />
+    <path
+        android:fillColor="#FFD1E4FF"
+        android:pathData="M46,58a8,8 0,1 0,16 0a8,8 0,1 0,-16 0z" />
+    <!-- Water sloshing in the drum -->
+    <path
+        android:fillColor="#FF9ECAFF"
+        android:pathData="M46.02,58.6q2,-2 4,0t4,0t4,0t3.96,0a8,8 0,0 1,-15.96 0z" />
+    <!-- Vibration arcs -->
+    <path
+        android:pathData="M32,49q-3,5 0,10 M26,45.5q-4.5,8.5 0,17 M76,49q3,5 0,10 M82,45.5q4.5,8.5 0,17"
+        android:strokeWidth="2.6"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round" />
+</vector>
