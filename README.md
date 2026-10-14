@@ -74,10 +74,18 @@ The "done" alert includes how long the cycle ran.
 
 ## Download
 
-Prebuilt APKs aren't published yet, so build from source for now (see below).
-<!-- TODO: add a "Download APK" link to GitHub Releases once the first release is published. -->
+Grab both APKs from the [latest release](https://github.com/mathewvarghesemanu/washwatch/releases/latest):
 
-## Install
+| APK | Install on |
+|---|---|
+| `WashWatch-v1.0.apk` | The spare phone on the machine (host) |
+| `WashWatchAlerts-v1.0.apk` | Your everyday phone (client) |
+
+Open each APK on its phone and allow *Install unknown apps* when prompted, or run `adb install <file>.apk`. Then skip to [Setup](#setup).
+
+The APKs are signed with a development key, not a Play Store key. If a future release uses a different key, uninstall the old app before installing it.
+
+## Build from source
 
 ### 1. WashWatch, on the spare phone
 

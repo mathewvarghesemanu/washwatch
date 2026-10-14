@@ -30,15 +30,16 @@ The host publishes to a private, randomly named [ntfy.sh](https://ntfy.sh) topic
 
 ## Install
 
+Download `WashWatchAlerts-v1.0.apk` from the [latest release](https://github.com/mathewvarghesemanu/washwatch/releases/latest) and open it on the phone (allow *Install unknown apps*), or run `adb install WashWatchAlerts-v1.0.apk`.
+
+To build from source instead:
+
 ```bash
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 Or open this folder in Android Studio and press **Run**.
-
-Prebuilt APKs aren't published yet.
-<!-- TODO: add a "Download APK" link to GitHub Releases once the first release is published. -->
 
 ## Security note
 
