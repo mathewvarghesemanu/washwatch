@@ -45,7 +45,7 @@ class VibrationMonitorService : Service(), SensorEventListener {
     @Volatile private var lastVibrationAt = 0L
     /** When the windowed RMS first went above the threshold (0 when it is below). */
     @Volatile private var rmsAboveSince = 0L
-    /** When the current cycle was confirmed as started, for reporting how long it ran. */
+    /** When the current cycle's vibration began (not when it was confirmed), for reporting how long it ran. */
     private var runningSince = 0L
     /** When monitoring began waiting for the first cycle; 0 once the "not started" alert is no longer armed. */
     private var waitingSince = 0L
@@ -152,7 +152,8 @@ class VibrationMonitorService : Service(), SensorEventListener {
                     if (since != 0L && now - since >= START_CONFIRM_MILLIS) {
                         machineState = MachineState.RUNNING
                         lastVibrationAt = now
-                        runningSince = now
+                        // Count from when the vibration began, not from the end of the confirmation wait.
+                        runningSince = since
                         // Only the first wait after starting monitoring is watched, so a finished cycle never triggers it.
                         waitingSince = 0L
                         getSystemService(NotificationManager::class.java).cancel(NOT_STARTED_NOTIFICATION_ID)
@@ -171,21 +172,25 @@ class VibrationMonitorService : Service(), SensorEventListener {
                     }
                 }
                 MachineState.RUNNING -> {
-                    val quietFor = now - lastVibrationAt
+                    // Read once: the sensor thread keeps updating it, and the check and the reported duration must agree.
+                    val lastVibration = lastVibrationAt
+                    val quietFor = now - lastVibration
                     if (quietFor >= confirmMillis) {
                         machineState = MachineState.IDLE
                         rmsAboveSince = 0L
-                        Log.d(TAG, "${appliance.label} finished.")
+                        // The cycle ended at the last vibration, not after the quiet period that confirmed it.
+                        val ranFor = formatDuration((lastVibration - runningSince) / 1000)
+                        Log.d(TAG, "${appliance.label} finished after $ranFor.")
                         sendNtfy(
                             "${appliance.label} done!",
-                            "Ran for ${formatDuration((lastVibrationAt - runningSince) / 1000)}.",
+                            "Ran for $ranFor.",
                             priority = 4,
                             tags = listOf(appliance.key, "white_check_mark", "basket"), // First tag names the machine for WashWatch Alerts.
                         )
-                        updateStatus("${appliance.label} finished!")
+                        updateStatus("${appliance.label} finished! Ran for $ranFor.")
                         delay(5000) // Let the "finished" message linger before going back to waiting.
                     } else if (quietFor < 1000) {
-                        updateStatus("${appliance.label} running — vibrating")
+                        updateStatus("${appliance.label} running for ${formatDuration((now - runningSince) / 1000)} — vibrating")
                     } else {
                         val remaining = (confirmMillis - quietFor) / 1000 + 1
                         updateStatus("Still for ${quietFor / 1000}s — done in ${formatDuration(remaining)} if it stays still")
@@ -253,7 +258,12 @@ class VibrationMonitorService : Service(), SensorEventListener {
 }
 
 fun formatDuration(totalSeconds: Long): String {
-    val m = totalSeconds / 60
+    val h = totalSeconds / 3600
+    val m = totalSeconds % 3600 / 60
     val s = totalSeconds % 60
-    return if (m > 0) "${m}m ${s}s" else "${s}s"
+    return when {
+        h > 0 -> "${h}h ${m}m ${s}s"
+        m > 0 -> "${m}m ${s}s"
+        else -> "${s}s"
+    }
 }

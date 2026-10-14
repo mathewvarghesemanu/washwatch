@@ -2,7 +2,10 @@ package space.mathewvarghese.washwatchalerts
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -55,6 +58,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -66,6 +70,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import space.mathewvarghese.washwatchalerts.ui.theme.RunningGreen
 import space.mathewvarghese.washwatchalerts.ui.theme.StoppedRed
 import space.mathewvarghese.washwatchalerts.ui.theme.WashWatchTheme
@@ -79,6 +84,14 @@ class MainActivity : ComponentActivity() {
     private var subscription by mutableStateOf<Subscription?>(null)
     private var notificationsAllowed by mutableStateOf(true)
     private var batteryUnrestricted by mutableStateOf(true)
+    /** Bumped every minute and whenever the phone's clock or timezone changes, so alert times re-render. */
+    private var clockNow by mutableLongStateOf(System.currentTimeMillis())
+
+    private val clockReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            clockNow = System.currentTimeMillis()
+        }
+    }
 
     private val scanLauncher = registerForActivityResult(ScanContract()) { result ->
         result.contents?.let { pairFrom(it) }
@@ -120,6 +133,18 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         // Make sure the listener is running whenever the app is opened (e.g. after being force-stopped).
         if (subscription != null) AlertService.start(this)
+        clockNow = System.currentTimeMillis()
+        val clockFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_TIME_TICK)
+            addAction(Intent.ACTION_TIME_CHANGED)
+            addAction(Intent.ACTION_TIMEZONE_CHANGED)
+        }
+        ContextCompat.registerReceiver(this, clockReceiver, clockFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(clockReceiver)
     }
 
     override fun onResume() {
@@ -217,7 +242,7 @@ class MainActivity : ComponentActivity() {
             )
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("1. On the WashWatch phone, open Phone notifications and tap \"Pair a phone\".")
+                    Text("1. On the WashWatch phone, open Settings → Notifications and tap \"Pair a phone\".")
                     Text("2. Tap Scan below and point this phone at the QR code.")
                     Text("3. Tap \"Send test\" on the WashWatch phone to check it works.")
                 }
@@ -413,7 +438,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.weight(1f),
                     )
                     Text(
-                        relativeTime(alert.time * 1000),
+                        alertTime(alert.time * 1000, clockNow),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -425,9 +450,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Wall-clock time in the phone's current timezone and 12/24-hour setting, plus how long ago, e.g. "3:42 PM · 5 min. ago".
+     * Older alerts also show the date. ntfy timestamps are UTC epoch seconds, so only the formatting depends on the timezone.
+     */
+    private fun alertTime(millis: Long, now: Long): String {
+        val flags = if (DateUtils.isToday(millis)) {
+            DateUtils.FORMAT_SHOW_TIME
+        } else {
+            DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH
+        }
+        val clock = DateUtils.formatDateTime(this, millis, flags)
+        return "$clock · ${relativeTime(millis, now)}"
+    }
+
     /** "Just now" for the first minute, which also covers the phone's clock being slightly behind ntfy's. */
-    private fun relativeTime(millis: Long): String {
-        val now = System.currentTimeMillis()
+    private fun relativeTime(millis: Long, now: Long): String {
         if (now - millis < DateUtils.MINUTE_IN_MILLIS) return "Just now"
         return DateUtils.getRelativeTimeSpanString(millis, now, DateUtils.MINUTE_IN_MILLIS).toString()
     }

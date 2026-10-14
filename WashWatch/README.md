@@ -1,28 +1,44 @@
 # WashWatch
 
-## Introduction
-New, very capable Android smartphones are now being sold for dirt cheap($30) by prepaid wireless companies that want you to buy their overpriced LTE data/SMS plan and use the phone like a normal person would.
+The host app. It runs on a spare Android phone mounted to a washing machine or dryer, detects when a cycle starts and finishes from accelerometer vibration, and sends an alert to your phone.
 
-Don't do that.
+**WashWatch (this app) → private ntfy.sh topic → [WashWatch Alerts](../WashWatchAlerts) (your phone)**
 
-Instead, use the phone like you would a Raspberry Pi or ESP32 with a bunch of integrated sensors attached. 
+See the [project README](../README.md) for the full story, screenshots and how detection works.
 
-WashWatch is one such example program using it for the use case of wanting to detect when an appliance e.g. washing machine, dryer, dishwasher, etc. is finished with its cycle and get notified and track these cycles.
+<p align="center">
+  <img src="../docs/screenshots/washwatch-home.png" width="220" alt="WashWatch home screen">
+  &nbsp;
+  <img src="../docs/screenshots/washwatch-running.png" width="220" alt="WashWatch monitoring">
+  &nbsp;
+  <img src="../docs/screenshots/washwatch-settings.png" width="220" alt="WashWatch settings">
+</p>
 
-With the help of some double-sided adhesive and a spring-loaded selfie phone mount, you can attach the phone to pretty much anything and have WashWatch set up to send a notification whenever a vibration over a certain threshold that you set is met or exceeded for a period of time you also can adjust: my personal use case right now is for getting notifications when the dryer is done because my dryer is older and doesn't have this built-in.
+## Requirements
 
+- Android 5.0+ (API 21) with an accelerometer and an internet connection
+- To build: JDK 21 and Android Studio Narwhal 3 Feature Drop (2025.1.3) or newer
 
+## Install
 
-## Hardware Requirements
-* Cheap Android phone
-  * Moto G Play 2024 from Straight Talk Wireless ($30 new on walmart.com)
-* Double-sided adhesive (3M VHB is good)
-* Spring-loaded phone holder harvested from a selfie stick.
+```bash
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
 
+Or open this folder in Android Studio and press **Run**.
+
+Prebuilt APKs aren't published yet.
+<!-- TODO: add a "Download APK" link to GitHub Releases once the first release is published. -->
 
 ## Setup
-Install the app and pair your everyday phone with [WashWatch Alerts](../WashWatchAlerts) under *Phone notifications → Pair a phone*. Alerts are delivered through a private [ntfy.sh](https://ntfy.sh) topic.
 
+1. Mount the phone firmly on the machine and keep it plugged in.
+2. Pick *Washing Machine* or *Dryer* on the home screen.
+3. In *Settings*, tap **Calibrate (machine off)** while the machine is idle. Adjust the confirmation time if your machine pauses for long stretches mid-cycle.
+4. In *Settings → Notifications*, tap **Pair a phone** and scan the QR code with [WashWatch Alerts](../WashWatchAlerts). Tap **Send test** to check it arrives.
+5. Tap the big button to start monitoring.
 
-## Goal
-I plan on making this more generic and allow it to use  more of the built-in sensors besides the accelerometer of the phone for detecting all sorts of different things just from a phone. Ultimately like an ESPHome but for cheap Android smartphones.
+## Security note
+
+ntfy.sh topics are public to anyone who knows the name. This app generates a random 16-character topic (`washwatch-…`), and that name is the only secret. Don't share screenshots of the pairing QR code or code. To rotate it, tap **New code** under *Pair a phone* and re-pair your phone.
