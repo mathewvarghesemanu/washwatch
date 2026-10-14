@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.Network
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.ServiceCompat
@@ -67,7 +68,7 @@ class AlertService : Service() {
             this,
             Notifications.SERVICE_NOTIFICATION_ID,
             Notifications.serviceNotification(this, AlertState.connection.value),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
+            if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0,
         )
         val subscription = settings.subscription
         if (subscription == null) {

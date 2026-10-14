@@ -4,15 +4,13 @@
     package="space.mathewvarghese.washwatch">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SENSORS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- WAKE_LOCK might be needed later for the service to run reliably when screen is off -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
-        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -24,7 +22,12 @@
         tools:targetApi="31">
         <service
             android:name=".VibrationMonitorService"
-            android:foregroundServiceType="dataSync"/>
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Monitors the accelerometer while the user has started watching a washer or dryer cycle, and notifies when the cycle finishes." />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true"

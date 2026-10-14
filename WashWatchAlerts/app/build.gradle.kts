@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,20 +8,35 @@ plugins {
 
 android {
     namespace = "space.mathewvarghese.washwatchalerts"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "space.mathewvarghese.washwatchalerts"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        // Upload key for Google Play. Values live in ../keystore.properties (git-ignored).
+        val propsFile = rootProject.file("keystore.properties")
+        if (propsFile.exists()) {
+            val props = Properties().apply { propsFile.inputStream().use { load(it) } }
+            create("release") {
+                storeFile = rootProject.file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
