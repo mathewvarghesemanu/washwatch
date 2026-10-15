@@ -80,6 +80,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.DarkMode
@@ -102,6 +103,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -114,6 +116,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -145,6 +148,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import space.mathewvarghese.washwatch.ui.theme.RunningGreen
 import space.mathewvarghese.washwatch.ui.theme.StoppedRed
 import space.mathewvarghese.washwatch.ui.theme.WashWatchTheme
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -266,7 +270,7 @@ class MainActivity : ComponentActivity() {
         } finally {
             sensorManager.unregisterListener(listener)
         }
-        return (max * Settings.BASELINE_MULTIPLIER).coerceAtLeast(Settings.MIN_THRESHOLD)
+        return max
     }
 
     @Composable
@@ -304,14 +308,15 @@ class MainActivity : ComponentActivity() {
                         appliance = appliance,
                         thresholdVersion = thresholdVersion,
                         onBack = { showSettings = false },
+                        onThresholdChanged = { thresholdVersion++ },
                         onCalibrate = { selected ->
                             scope.launch {
-                                val threshold = measureBaseline(CALIBRATION_COUNTDOWN_SECONDS, CALIBRATION_MEASURE_MILLIS) {
+                                val baseline = measureBaseline(CALIBRATION_COUNTDOWN_SECONDS, CALIBRATION_MEASURE_MILLIS) {
                                     calibration = it
                                 }
-                                settings.setThreshold(selected, threshold)
+                                settings.setBaseline(selected, baseline)
                                 thresholdVersion++
-                                calibration = Calibration.Done(threshold)
+                                calibration = Calibration.Done(settings.threshold(selected) ?: Settings.DEFAULT_THRESHOLD)
                                 delay(1800)
                                 calibration = null
                             }
@@ -611,6 +616,7 @@ class MainActivity : ComponentActivity() {
         appliance: Appliance?,
         thresholdVersion: Int,
         onBack: () -> Unit,
+        onThresholdChanged: () -> Unit,
         onCalibrate: (Appliance) -> Unit,
     ) {
         val snackbar = remember { SnackbarHostState() }
@@ -637,7 +643,12 @@ class MainActivity : ComponentActivity() {
             ) {
                 if (appliance != null) {
                     SectionHeader("${appliance.label} detection")
-                    ApplianceSettingsCard(appliance, thresholdVersion, onCalibrate = { onCalibrate(appliance) })
+                    ApplianceSettingsCard(
+                        appliance,
+                        thresholdVersion,
+                        onThresholdChanged = onThresholdChanged,
+                        onCalibrate = { onCalibrate(appliance) },
+                    )
                 } else {
                     SectionHeader("Detection")
                     OutlinedCard(Modifier.fillMaxWidth()) {
@@ -661,9 +672,16 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun ApplianceSettingsCard(appliance: Appliance, thresholdVersion: Int, onCalibrate: () -> Unit) {
+    private fun ApplianceSettingsCard(
+        appliance: Appliance,
+        thresholdVersion: Int,
+        onThresholdChanged: () -> Unit,
+        onCalibrate: () -> Unit,
+    ) {
         var confirmText by remember(appliance) { mutableStateOf(settings.confirmSeconds(appliance).toString()) }
-        val threshold = remember(appliance, thresholdVersion) { settings.threshold(appliance) }
+        val baseline = remember(appliance, thresholdVersion) { settings.baseline(appliance) }
+        var multiplier by remember(appliance) { mutableFloatStateOf(settings.multiplier(appliance)) }
+        val threshold = baseline?.let { (it * multiplier).coerceAtLeast(Settings.MIN_THRESHOLD) }
         val transparent = ListItemDefaults.colors(containerColor = Color.Transparent)
         val seconds = confirmText.toLongOrNull() ?: 0
 
@@ -730,6 +748,57 @@ class MainActivity : ComponentActivity() {
                 Icon(Icons.Outlined.Sensors, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                 Text("Calibrate (machine off)")
+            }
+
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+
+            ListItem(
+                headlineContent = { Text("Sensitivity multiplier") },
+                supportingContent = {
+                    Text(
+                        if (baseline != null) {
+                            String.format(
+                                "Running means %.1f× the calibrated %.3f m/s². Lower is more sensitive; raise it if footsteps or a nearby machine trigger it.",
+                                multiplier,
+                                baseline,
+                            )
+                        } else {
+                            "Applies once calibrated. Lower is more sensitive; raise it if footsteps or a nearby machine trigger it."
+                        }
+                    )
+                },
+                leadingContent = { Icon(Icons.Outlined.Speed, contentDescription = null) },
+                trailingContent = {
+                    Text(
+                        String.format("%.1f×", multiplier),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                },
+                colors = transparent,
+            )
+            Slider(
+                value = multiplier,
+                onValueChange = { multiplier = (it * 2).roundToInt() / 2f }, // 0.5× steps
+                onValueChangeFinished = {
+                    settings.setMultiplier(appliance, multiplier)
+                    onThresholdChanged()
+                },
+                valueRange = Settings.MIN_MULTIPLIER..Settings.MAX_MULTIPLIER,
+                steps = ((Settings.MAX_MULTIPLIER - Settings.MIN_MULTIPLIER) * 2).toInt() - 1,
+                modifier = Modifier.padding(start = 56.dp, end = 16.dp),
+            )
+            if (multiplier != Settings.DEFAULT_MULTIPLIER) {
+                TextButton(
+                    onClick = {
+                        multiplier = Settings.DEFAULT_MULTIPLIER
+                        settings.setMultiplier(appliance, multiplier)
+                        onThresholdChanged()
+                    },
+                    modifier = Modifier.padding(start = 44.dp, bottom = 8.dp),
+                ) { Text("Reset to %.0f×".format(Settings.DEFAULT_MULTIPLIER)) }
+            } else {
+                Spacer(Modifier.height(16.dp))
             }
         }
     }

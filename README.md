@@ -32,7 +32,7 @@ The two phones talk through a private, randomly named [ntfy.sh](https://ntfy.sh)
 
 ### Detection
 
-1. **Calibrate.** With the machine off, WashWatch measures the background vibration for a few seconds. It sets the trigger threshold at 3× the peak it sees.
+1. **Calibrate.** With the machine off, WashWatch measures the background vibration for a few seconds. It sets the trigger threshold at a multiple of the peak it sees: 3× by default, adjustable from 1.5× to 10× in settings (lower is more sensitive).
 2. **Start.** Once vibration (RMS over a ~1.5 s window) stays above the threshold for 10 seconds, the cycle counts as started.
 3. **Finish.** Once the machine has been still for a set quiet period, the cycle counts as done. The default is 3 minutes for a washing machine and 1 minute for a dryer, and you can change either. The quiet period covers the pauses mid-cycle when the drum stops to soak or drain.
 4. **Not started?** If nothing happens within 3 minutes of starting monitoring, you get a "did you press start?" alert.
@@ -55,8 +55,10 @@ The "done" alert includes how long the cycle ran.
 - One-tap calibration
 - Pair your phone by scanning a QR code
 - Alerts survive dropped connections: after a reconnect or reboot, the client fetches anything it missed and skips duplicates
-- "Done" alerts are loud and "started" alerts are quiet. You can tune each in Android's notification settings
-- Light and dark themes
+- "Done" alerts are loud and "started" alerts are quiet. Pick the "done" sound (chime, alarm, ringtone or silent), vibration, and an alarm-style mode that keeps ringing until you dismiss it
+- A running-cycle timer that shows how long the last cycle took and roughly when this one will finish
+- Alert history folds each cycle into one row (start, finish, duration), grouped by day
+- Light and dark themes (dark by default)
 
 ## Requirements
 

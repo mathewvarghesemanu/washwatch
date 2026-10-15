@@ -118,7 +118,14 @@ class AlertService : Service() {
         settings.history = updated
         AlertState.setHistory(settings.history)
         settings.lastSeenSeconds = maxOf(settings.lastSeenSeconds ?: 0L, alert.time)
-        Notifications.showAlert(this, alert)
+        val machine = alert.machine
+        if (machine != null && alert.kind == AlertKind.DONE) Notifications.cancelCycle(this, machine)
+        Notifications.showAlert(
+            this,
+            alert,
+            lastCycle = machine?.let { Cycles.lastCycle(updated, it) },
+            started = if (alert.kind == AlertKind.DONE) Cycles.startedFor(updated, alert) else null,
+        )
     }
 
     private fun setConnection(state: ConnectionState) {

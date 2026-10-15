@@ -27,14 +27,33 @@ class Settings(context: Context) {
     fun setConfirmSeconds(appliance: Appliance, seconds: Int) =
         prefs.edit().putInt("${appliance.key}_confirm_sec", seconds).apply()
 
-    /** Vibration threshold in m/s²; null until the user has measured the "off" baseline. */
-    fun threshold(appliance: Appliance): Float? {
-        val key = "${appliance.key}_threshold"
-        return if (prefs.contains(key)) prefs.getFloat(key, DEFAULT_THRESHOLD) else null
+    /**
+     * Strongest vibration (m/s²) measured with the machine off; null until calibrated.
+     * Builds before the multiplier setting stored only the threshold, made with the old fixed 3×, so undo that.
+     */
+    fun baseline(appliance: Appliance): Float? {
+        val key = "${appliance.key}_baseline"
+        val legacyKey = "${appliance.key}_threshold"
+        return when {
+            prefs.contains(key) -> prefs.getFloat(key, 0f)
+            prefs.contains(legacyKey) -> prefs.getFloat(legacyKey, DEFAULT_THRESHOLD) / DEFAULT_MULTIPLIER
+            else -> null
+        }
     }
 
-    fun setThreshold(appliance: Appliance, value: Float) =
-        prefs.edit().putFloat("${appliance.key}_threshold", value).apply()
+    fun setBaseline(appliance: Appliance, value: Float) =
+        prefs.edit().putFloat("${appliance.key}_baseline", value).remove("${appliance.key}_threshold").apply()
+
+    /** How many times the calibrated baseline vibration must be exceeded to count as running. */
+    fun multiplier(appliance: Appliance): Float =
+        prefs.getFloat("${appliance.key}_multiplier", DEFAULT_MULTIPLIER)
+
+    fun setMultiplier(appliance: Appliance, value: Float) =
+        prefs.edit().putFloat("${appliance.key}_multiplier", value).apply()
+
+    /** Vibration threshold in m/s² (baseline × multiplier); null until the user has measured the "off" baseline. */
+    fun threshold(appliance: Appliance): Float? =
+        baseline(appliance)?.let { (it * multiplier(appliance)).coerceAtLeast(MIN_THRESHOLD) }
 
     /** ntfy topic the paired phone subscribes to; null when no phone is paired. */
     var ntfyTopic: String?
@@ -54,7 +73,9 @@ class Settings(context: Context) {
         const val DEFAULT_THRESHOLD = 0.15f
         /** Floor so a perfectly still sensor (e.g. an emulator) doesn't yield a zero threshold. */
         const val MIN_THRESHOLD = 0.02f
-        const val BASELINE_MULTIPLIER = 3f
+        const val DEFAULT_MULTIPLIER = 3f
+        const val MIN_MULTIPLIER = 1.5f
+        const val MAX_MULTIPLIER = 10f
     }
 }
 

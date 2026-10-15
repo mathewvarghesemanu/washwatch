@@ -12,6 +12,8 @@ See the [project README](../README.md) for the full story and how detection work
   <img src="../docs/screenshots/alerts-listening.png" width="220" alt="Listening with recent alerts">
   &nbsp;
   <img src="../docs/screenshots/alerts-notifications.png" width="220" alt="Alert notifications">
+  &nbsp;
+  <img src="../docs/screenshots/alerts-settings.png" width="220" alt="Alert sound and pairing settings">
 </p>
 
 ## How it works
@@ -20,7 +22,11 @@ The host publishes to a private, randomly named [ntfy.sh](https://ntfy.sh) topic
 
 - **Pairing:** scan the QR code the host shows under *Settings → Notifications → Pair a phone*. You can also scan it with the stock camera app (this app handles `ntfy://ntfy.sh/washwatch-…` links), or type the pairing code by hand.
 - **Missed alerts:** after a dropped connection or reboot, the app asks ntfy for everything since the last alert it saw and skips duplicates. ntfy.sh keeps messages for about 12 hours.
-- **Priorities:** "done" alerts (priority 4–5) use a high-importance channel and "started" alerts (1–2) use a quiet one. You can tune each in Android's notification settings.
+- **Priorities:** "done" alerts (priority 4–5) use a high-importance channel and "started" alerts (1–2) use a quiet one.
+- **Done sound:** tap the gear to pick the "done" sound (a chime, alarm, ringtone, or silent), turn vibration on or off, and choose *Ring like an alarm* to keep ringing at alarm volume until you dismiss it. The default is the phone's notification sound with vibration. Android won't let an app change a channel's sound once it exists, so each change recreates the "done" channels under a new ID.
+- **Cycle timer:** a "started" alert starts a timer, both in the app and in the notification. The timer shows how long the last cycle of that machine took and roughly when this one should finish. It clears when the "done" alert arrives, or after 3 hours.
+- **Tidy history:** each "started" and "done" pair folds into one row showing the start and finish times and how long the cycle ran. Rows are grouped by day, and anything older than a week sits behind *Show older*. The "done" notification sums up the cycle the same way. Alerts delivered more than 15 minutes late, for example after a reconnect, arrive silently. Alerts more than 6 hours old go only to the history.
+- **Dark theme** by default; switch it off in settings.
 - **Reliability:** it reconnects with backoff (2 s → 60 s) and right away when the network returns. It restarts after a reboot or app update. Allow "unrestricted battery" when the app asks, so Doze doesn't delay alerts.
 
 ## Requirements
