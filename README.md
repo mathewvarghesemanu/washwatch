@@ -26,10 +26,10 @@ No smart plug, no cloud account, no extra hardware. Just a spare phone and some 
 Switching modes only changes the screen: a started monitor keeps monitoring and a paired phone keeps listening.
 
 ```
- ┌──────────────┐  vibration   ┌──────────────┐   HTTPS    ┌─────────┐   stream   ┌──────────────────┐
- │   Washer /   │ ───────────▶ │  WashWatch   │ ─────────▶ │ ntfy.sh │ ─────────▶ │ WashWatch Alerts │
- │    Dryer     │              │ (host phone) │  publish   │  topic  │  subscribe │  (your phone)    │
- └──────────────┘              └──────────────┘            └─────────┘            └──────────────────┘
+ ┌──────────────┐  vibration   ┌──────────────┐   HTTPS    ┌─────────┐   stream   ┌──────────────┐
+ │   Washer /   │ ───────────▶ │  WashWatch   │ ─────────▶ │ ntfy.sh │ ─────────▶ │  WashWatch   │
+ │    Dryer     │              │ Monitor mode │  publish   │  topic  │  subscribe │ Alerts mode  │
+ └──────────────┘              └──────────────┘            └─────────┘            └──────────────┘
 ```
 
 The two phones talk through a private, randomly named [ntfy.sh](https://ntfy.sh) topic. No account, no Firebase, no Google Play Services.
@@ -45,13 +45,13 @@ The "done" alert includes how long the cycle ran.
 
 ## Screenshots
 
-| WashWatch: ready | WashWatch: monitoring | WashWatch: settings |
-|---|---|---|
-| <img src="docs/screenshots/washwatch-home.png" width="240" alt="WashWatch home screen"> | <img src="docs/screenshots/washwatch-running.png" width="240" alt="WashWatch monitoring"> | <img src="docs/screenshots/washwatch-settings.png" width="240" alt="WashWatch settings"> |
+| First launch: pick a mode | Monitor: ready | Monitor: running | Monitor: settings |
+|---|---|---|---|
+| <img src="docs/screenshots/mode-picker.png" width="200" alt="Choosing Monitor or Alerts mode on first launch"> | <img src="docs/screenshots/washwatch-home.png" width="200" alt="Monitor mode home screen"> | <img src="docs/screenshots/washwatch-running.png" width="200" alt="Monitor mode during a cycle"> | <img src="docs/screenshots/washwatch-settings.png" width="200" alt="Monitor mode settings with the pairing QR code"> |
 
-| Alerts: pairing | Alerts: listening | Alerts: notifications |
-|---|---|---|
-| <img src="docs/screenshots/alerts-pair.png" width="240" alt="WashWatch Alerts pairing screen"> | <img src="docs/screenshots/alerts-listening.png" width="240" alt="WashWatch Alerts listening with recent alerts"> | <img src="docs/screenshots/alerts-notifications.png" width="240" alt="Alert notifications"> |
+| Alerts: pairing | Alerts: listening | Alerts: notifications | Alerts: settings |
+|---|---|---|---|
+| <img src="docs/screenshots/alerts-pair.png" width="200" alt="Alerts mode pairing screen"> | <img src="docs/screenshots/alerts-listening.png" width="200" alt="Alerts mode with a running cycle and history"> | <img src="docs/screenshots/alerts-notifications.png" width="200" alt="Alert notifications"> | <img src="docs/screenshots/alerts-settings.png" width="200" alt="Alerts mode settings"> |
 
 ## Features
 
