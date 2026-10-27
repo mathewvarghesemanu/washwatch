@@ -9,6 +9,15 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Alerts mode -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Monitor mode needs the accelerometer and Alerts mode can use the camera, but neither is required. -->
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -28,6 +37,25 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Monitors the accelerometer while the user has started watching a washer or dryer cycle, and notifies when the cycle finishes." />
         </service>
+        <!-- Alerts mode: holds the long-lived ntfy.sh stream open so alerts arrive within a second or two. -->
+        <service
+            android:name=".alerts.AlertService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps a push-notification connection open to the user's paired WashWatch device (via ntfy.sh, without Google Play Services) so laundry alerts arrive immediately." />
+        </service>
+
+        <receiver
+            android:name=".alerts.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -39,6 +67,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".alerts.AlertsActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.WashWatch.Alerts">
+            <!-- Scanning the monitor's QR code with the stock camera app offers to open it here. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ntfy" />
+                <data android:host="ntfy.sh" />
+                <data android:pathPrefix="/washwatch-" />
+            </intent-filter>
+        </activity>
+
+        <!-- Let the scanner follow the phone's orientation instead of forcing landscape. -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="fullSensor"
+            tools:replace="screenOrientation" />
     </application>
 
 </manifest>

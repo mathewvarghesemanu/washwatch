@@ -2,7 +2,7 @@
 
 The host app. It runs on a spare Android phone mounted to a washing machine or dryer, detects when a cycle starts and finishes from accelerometer vibration, and sends an alert to your phone.
 
-**WashWatch (this app) → private ntfy.sh topic → [WashWatch Alerts](../WashWatchAlerts) (your phone)**
+**WashWatch in Monitor mode (this phone) → private ntfy.sh topic → WashWatch in Alerts mode (your phone)**. One app does both; switch modes from the menu under the app name.
 
 See the [project README](../README.md) for the full story, screenshots and how detection works.
 
@@ -16,7 +16,7 @@ See the [project README](../README.md) for the full story, screenshots and how d
 
 ## Requirements
 
-- Android 5.0+ (API 21) with an accelerometer and an internet connection
+- Android 8.0+ (API 26) with an accelerometer and an internet connection
 - To build: JDK 21 and Android Studio Narwhal 3 Feature Drop (2025.1.3) or newer
 
 ## Install
@@ -37,7 +37,7 @@ Or open this folder in Android Studio and press **Run**.
 1. Mount the phone firmly on the machine and keep it plugged in.
 2. Pick *Washing Machine* or *Dryer* on the home screen.
 3. In *Settings*, tap **Calibrate (machine off)** while the machine is idle. Adjust the confirmation time if your machine pauses for long stretches mid-cycle.
-4. In *Settings → Notifications*, tap **Pair a phone** and scan the QR code with [WashWatch Alerts](../WashWatchAlerts). Tap **Send test** to check it arrives.
+4. In *Settings → Notifications*, tap **Pair a phone** and scan the QR code from WashWatch in Alerts mode on your phone. Tap **Send test** to check it arrives.
 5. Tap the big button to start monitoring.
 
 ## Security note

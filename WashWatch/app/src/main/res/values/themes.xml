@@ -3,6 +3,11 @@
 
     <style name="Theme.WashWatch" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
 
+    <!-- Dark window so the default (dark) theme doesn't flash white while Alerts mode opens. -->
+    <style name="Theme.WashWatch.Alerts">
+        <item name="android:windowBackground">@color/washwatch_dark_surface</item>
+    </style>
+
     <!-- Brief system splash; it hands off to the in-app intro as soon as the first frame is drawn. -->
     <style name="Theme.WashWatch.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/washwatch_blue</item>

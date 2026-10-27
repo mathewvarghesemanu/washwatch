@@ -9,17 +9,21 @@ No smart plug, no cloud account, no extra hardware. Just a spare phone and some 
 <p align="center">
   <img src="docs/screenshots/washwatch-demo.gif" width="220" alt="Starting monitoring in WashWatch">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/alerts-notifications.png" width="220" alt="WashWatch Alerts notifications on the client phone">
+  <img src="docs/screenshots/alerts-notifications.png" width="220" alt="WashWatch alert notifications on your phone">
 </p>
 
 ## How it works
 
-**[WashWatch](WashWatch/) (host phone on the machine) → private ntfy.sh topic → [WashWatch Alerts](WashWatchAlerts/) (your phone)**
+**WashWatch in Monitor mode (phone on the machine) → private ntfy.sh topic → WashWatch in Alerts mode (your phone)**
 
-| App | Runs on | What it does |
+[WashWatch](WashWatch/) is one app with two modes. Install it on both phones; on first launch it asks where the phone is, and you can switch any time from the menu under the app name at the top of the screen.
+
+| Mode | Runs on | What it does |
 |---|---|---|
-| [**WashWatch**](WashWatch/) | A spare phone stuck to the washer or dryer (the *host*) | Reads the accelerometer, detects when a cycle starts and finishes, and publishes an alert |
-| [**WashWatch Alerts**](WashWatchAlerts/) | Your everyday phone (the *client*) | Listens for those alerts and shows them as notifications |
+| **Monitor** ("On the machine") | A spare phone stuck to the washer or dryer (the *host*) | Reads the accelerometer, detects when a cycle starts and finishes, and publishes an alert |
+| **Alerts** ("With me") | Your everyday phone (the *client*) | Listens for those alerts and shows them as notifications |
+
+Switching modes only changes the screen: a started monitor keeps monitoring and a paired phone keeps listening.
 
 ```
  ┌──────────────┐  vibration   ┌──────────────┐   HTTPS    ┌─────────┐   stream   ┌──────────────────┐
@@ -62,34 +66,27 @@ The "done" alert includes how long the cycle ran.
 
 ## Requirements
 
-| | WashWatch (host) | WashWatch Alerts (client) |
+| | Monitor mode (host) | Alerts mode (client) |
 |---|---|---|
-| Android version | 5.0+ (API 21) | 8.0+ (API 26) |
-| Target SDK | 34 (Android 14) | 34 (Android 14) |
+| Android version | 8.0+ (API 26) | 8.0+ (API 26) |
+| Target SDK | 36 | 36 |
 | Sensors / hardware | Accelerometer, internet connection | Internet connection; a camera is optional, for QR pairing |
 
 **To build from source:**
 
-- JDK 21. The Gradle daemon is pinned to JetBrains JDK 21, which Android Studio bundles. The apps compile to Java 11 bytecode.
+- JDK 21. The Gradle daemon is pinned to JetBrains JDK 21, which Android Studio bundles. The app compiles to Java 11 bytecode.
 - Android Studio Narwhal 3 Feature Drop (2025.1.3) or newer, which you need for Android Gradle Plugin 8.13
 - Gradle 8.13 (downloaded automatically by the wrapper), Kotlin 2.0.21, Jetpack Compose
 
 ## Download
 
-Grab both APKs from the [latest release](https://github.com/mathewvarghesemanu/washwatch/releases/latest):
+Grab the APK from the [latest release](https://github.com/mathewvarghesemanu/washwatch/releases/latest) and install it on both phones. (Releases up to v1.0.1 shipped a separate `WashWatchAlerts` APK for the client; from v1.1.0 the one app does both, and the old Alerts app can be uninstalled after re-pairing.)
 
-| APK | Install on |
-|---|---|
-| `WashWatch-v1.0.apk` | The spare phone on the machine (host) |
-| `WashWatchAlerts-v1.0.apk` | Your everyday phone (client) |
-
-Open each APK on its phone and allow *Install unknown apps* when prompted, or run `adb install <file>.apk`. Then skip to [Setup](#setup).
+Open the APK on each phone and allow *Install unknown apps* when prompted, or run `adb install <file>.apk`. Then skip to [Setup](#setup).
 
 The APKs are signed with a development key, not a Play Store key. If a future release uses a different key, uninstall the old app before installing it.
 
 ## Build from source
-
-### 1. WashWatch, on the spare phone
 
 ```bash
 cd WashWatch
@@ -97,25 +94,15 @@ cd WashWatch
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Or open the `WashWatch/` folder in Android Studio and press **Run**.
-
-### 2. WashWatch Alerts, on your phone
-
-```bash
-cd WashWatchAlerts
-./gradlew assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
-
-If both phones are plugged in at once, pick one with `adb -s <serial> install …`. Run `adb devices` to list the serials.
+Or open the `WashWatch/` folder in Android Studio and press **Run**. Install the same APK on both phones. If both phones are plugged in at once, pick one with `adb -s <serial> install …`. Run `adb devices` to list the serials.
 
 ## Setup
 
 **You'll need:** the two phones above and something to mount the host phone. Strong double-sided tape or a spring-loaded phone clamp works.
 
 1. Mount the spare phone firmly on top of or on the side of the machine. Keep it plugged in.
-2. In WashWatch, pick *Washing Machine* or *Dryer*. Open *Settings* and tap **Calibrate (machine off)** while the machine is idle.
-3. In *Settings → Notifications*, tap **Pair a phone**, then scan the QR code with WashWatch Alerts.
+2. Open WashWatch on the spare phone and choose **On the machine** (Monitor mode). Pick *Washing Machine* or *Dryer*. Open *Settings* and tap **Calibrate (machine off)** while the machine is idle.
+3. In *Settings → Notifications*, tap **Pair a phone**. On your phone, open WashWatch, choose **With me** (Alerts mode) and scan the QR code.
 4. Tap **Send test** on the host to check the connection.
 5. Tap the big button to start monitoring, run a load, and go back upstairs.
 
