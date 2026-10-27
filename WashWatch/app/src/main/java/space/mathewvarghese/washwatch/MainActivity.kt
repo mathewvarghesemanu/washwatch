@@ -137,7 +137,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -185,6 +184,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var settings: Settings
     /** Drives the theme; read from settings in onCreate and flipped by the Appearance switch. */
     private val darkMode = mutableStateOf(true)
+    /** Null on a fresh install until the user picks a mode. */
+    private val mode = mutableStateOf<AppMode?>(null)
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -199,12 +200,25 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         settings = Settings(this)
+        mode.value = settings.mode
+        // The launcher always opens this activity; send Alerts-mode phones straight on to their screen.
+        if (mode.value == AppMode.ALERTS && intent.action == Intent.ACTION_MAIN && savedInstanceState == null) {
+            openMode(AppMode.ALERTS)
+            return
+        }
         darkMode.value = settings.darkMode
         enableEdgeToEdge()
         setContent {
             WashWatchTheme(darkTheme = darkMode.value) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-                    WashWatchApp()
+                    if (mode.value == null) {
+                        ModePicker { picked ->
+                            if (picked == AppMode.MONITOR) mode.value = picked
+                            openMode(picked)
+                        }
+                    } else {
+                        WashWatchApp()
+                    }
                 }
                 // Saveable so rotating the phone doesn't replay the intro.
                 var showIntro by rememberSaveable { mutableStateOf(true) }
@@ -217,6 +231,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reopen in whichever mode was used last, including when this screen was reached from a notification.
+        if (mode.value != null) settings.mode = AppMode.MONITOR
     }
 
     private fun toggleService() {
@@ -363,7 +383,7 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.SemiBold) },
+                    title = { ModeSwitcher(AppMode.MONITOR) { openMode(it) } },
                     actions = {
                         IconButton(onClick = { gearTurns += 1; onOpenSettings() }) {
                             Icon(Icons.Outlined.Settings, contentDescription = "Settings", modifier = Modifier.rotate(gearRotation))
@@ -820,7 +840,7 @@ class MainActivity : ComponentActivity() {
                     supportingContent = {
                         Text(
                             if (current == null) {
-                                "Get start and done alerts on another phone through the free ntfy app."
+                                "Get start and done alerts on your phone: install WashWatch on it and pick Alerts mode."
                             } else {
                                 "Paired. Alerts go to every phone subscribed to this code."
                             }
@@ -862,8 +882,8 @@ class MainActivity : ComponentActivity() {
                                 .padding(10.dp),
                         )
                         Text(
-                            "1. Install ntfy (Play Store / App Store) on the other phone.\n" +
-                                "2. Scan this code with its camera and tap Subscribe.\n" +
+                            "1. On your phone, open WashWatch in Alerts mode.\n" +
+                                "2. Tap Scan QR code and point it at this code.\n" +
                                 "3. Tap Send test to confirm it arrives.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -874,7 +894,7 @@ class MainActivity : ComponentActivity() {
                                     Text(current, style = MaterialTheme.typography.bodyLarge, fontFamily = FontFamily.Monospace)
                                 }
                                 Text(
-                                    "Can't scan? In ntfy, tap + and type this code into the Topic name box.",
+                                    "Can't scan? Tap \"Enter pairing code instead\" in WashWatch, or subscribe to this topic in the ntfy app.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = scheme.onSurfaceVariant,
                                 )
@@ -903,8 +923,8 @@ class MainActivity : ComponentActivity() {
                                         type = "text/plain"
                                         putExtra(
                                             Intent.EXTRA_TEXT,
-                                            "To get WashWatch alerts: install ntfy, tap +, and enter this pairing code: $current\n" +
-                                                "Or open ${Ntfy.subscribeLink(current)}",
+                                            "To get WashWatch alerts: open WashWatch in Alerts mode, tap \"Enter pairing code instead\" " +
+                                                "and enter $current\nOr open ${Ntfy.subscribeLink(current)}",
                                         )
                                     }
                                     startActivity(Intent.createChooser(share, "Share pairing link"))

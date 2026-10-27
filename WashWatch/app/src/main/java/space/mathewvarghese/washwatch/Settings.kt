@@ -13,6 +13,16 @@ enum class Appliance(val key: String, val label: String, val defaultConfirmSecon
     }
 }
 
+/** What this phone does: sits on the machine and watches it, or receives the alerts. */
+enum class AppMode(val key: String) {
+    MONITOR("monitor"),
+    ALERTS("alerts");
+
+    companion object {
+        fun fromKey(key: String?): AppMode? = entries.firstOrNull { it.key == key }
+    }
+}
+
 /** Thin wrapper around SharedPreferences shared by the activity and the service. */
 class Settings(context: Context) {
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -60,7 +70,16 @@ class Settings(context: Context) {
         get() = prefs.getString(KEY_NTFY_TOPIC, null)
         set(value) = prefs.edit().putString(KEY_NTFY_TOPIC, value).apply()
 
-    /** App theme; dark unless the user switched to light in settings. */
+    /**
+     * The mode the app opens in: the last one used, or null on a fresh install so the user picks.
+     * Installs from before the merge only had the monitor, so treat a configured one as monitor mode.
+     */
+    var mode: AppMode?
+        get() = AppMode.fromKey(prefs.getString(KEY_MODE, null))
+            ?: AppMode.MONITOR.takeIf { appliance != null || ntfyTopic != null }
+        set(value) = prefs.edit().putString(KEY_MODE, value?.key).apply()
+
+    /** App theme, for both modes; dark unless the user switched to light in settings. */
     var darkMode: Boolean
         get() = prefs.getBoolean(KEY_DARK_MODE, true)
         set(value) = prefs.edit().putBoolean(KEY_DARK_MODE, value).apply()
@@ -70,6 +89,7 @@ class Settings(context: Context) {
         private const val KEY_NTFY_TOPIC = "ntfy_topic"
         private const val KEY_DARK_MODE = "dark_mode"
         private const val KEY_APPLIANCE = "appliance"
+        private const val KEY_MODE = "app_mode"
         const val DEFAULT_THRESHOLD = 0.15f
         /** Floor so a perfectly still sensor (e.g. an emulator) doesn't yield a zero threshold. */
         const val MIN_THRESHOLD = 0.02f

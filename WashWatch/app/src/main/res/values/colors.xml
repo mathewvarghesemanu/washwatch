@@ -8,4 +8,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="washwatch_blue">#FF0061A4</color>
+    <color name="washwatch_dark_surface">#FF111418</color>
 </resources>
