@@ -80,11 +80,11 @@ The "done" alert includes how long the cycle ran.
 
 ## Download
 
-Grab the APK from the [latest release](https://github.com/mathewvarghesemanu/washwatch/releases/latest) and install it on both phones. (Releases up to v1.0.1 shipped a separate `WashWatchAlerts` APK for the client; from v1.1.0 the one app does both, and the old Alerts app can be uninstalled after re-pairing.)
+Grab the APK from the [latest release](https://github.com/mathewvarghesemanu/washwatch/releases/latest) and install it on both phones. (v1.0 shipped a separate `WashWatchAlerts` APK for the client; from v1.1.0 the one app does both, and the old Alerts app can be uninstalled after re-pairing.)
 
 Open the APK on each phone and allow *Install unknown apps* when prompted, or run `adb install <file>.apk`. Then skip to [Setup](#setup).
 
-The APKs are signed with a development key, not a Play Store key. If a future release uses a different key, uninstall the old app before installing it.
+From v1.1.0 the APK is signed with the release key. v1.0 used a development key, so uninstall v1.0 before installing v1.1.0 or later.
 
 ## Build from source
 
