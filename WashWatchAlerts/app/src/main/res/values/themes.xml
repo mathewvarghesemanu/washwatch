@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Dark window so the default (dark) theme doesn't flash white while the app starts. -->
-    <style name="Theme.WashWatchAlerts" parent="Theme.MaterialComponents.NoActionBar">
-        <item name="android:windowBackground">@color/washwatch_dark_surface</item>
-    </style>
-</resources>
